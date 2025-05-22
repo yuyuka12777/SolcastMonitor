@@ -21,11 +21,12 @@ class SolcastApp:
         self.root.geometry("800x600")
         self.root.minsize(800, 600)
         
-        self.config = Config.load()
+        # Configインスタンスを作成
+        self.config = Config.load()  # これでOK
         self.forecasts: List[SolarForecast] = []
         
-        # 最小待機時間をインスタンス変数として設定
-        self.MIN_REQUEST_INTERVAL = self.config.get("api_cooltime", self.DEFAULT_REQUEST_INTERVAL)
+        # 最小待機時間を設定
+        self.MIN_REQUEST_INTERVAL = int(self.config.get("api_cooltime", 30))
         
         # 最後のリクエスト時刻を記録
         self.last_request_time = datetime.min
@@ -222,7 +223,9 @@ class SolcastApp:
         """API Keyを保存する"""
         api_key = self.api_key_var.get().strip()
         if api_key:
-            Config.save_api_key(api_key)
+            # Config.save_api_key(api_key) の代わりに：
+            self.config.set("api_key", api_key)
+            self.config.save()
             messagebox.showinfo("情報", "API Keyを保存しました")
         else:
             messagebox.showerror("エラー", "API Keyを入力してください")
@@ -236,6 +239,11 @@ class SolcastApp:
             
             # 最小クールタイムを設定
             self.MIN_REQUEST_INTERVAL = max(cooltime, 5)
+            
+            # 設定を保存
+            self.config.set("api_cooltime", self.MIN_REQUEST_INTERVAL)
+            self.config.save()
+            
             messagebox.showinfo("情報", f"APIクールタイムを{self.MIN_REQUEST_INTERVAL}秒に設定しました")
         
         except ValueError:
